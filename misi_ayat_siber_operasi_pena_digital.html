@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MISI AYAT SIBER — OPERASI PENA DIGITAL</title>
+    <!-- Google Fonts for Dyslexia Friendly Reading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Lexend', 'Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        dyslexiaBg: '#F8FAFC',
+                        creamCard: '#FFFDF9',
+                        slateDark: '#1E293B',
+                        siberBlue: '#0284C7',
+                        siberCyan: '#06B6D4',
+                        siberPurple: '#8B5CF6',
+                        softSuccess: '#10B981',
+                        softWarning: '#F59E0B',
+                        softPink: '#F43F5E'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- MediaPipe Hands Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        /* Dyslexia-friendly custom utility styles */
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: #F1F5F9;
+            color: #0F172A;
+            letter-spacing: 0.03em;
+            word-spacing: 0.08em;
+            line-height: 1.7;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .dyslexia-shadow {
+            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        /* Glassmorphism Soft Holographic UI */
+        .cyber-glass {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .cyber-glass-dark {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(56, 189, 248, 0.4);
+            color: #F8FAFC;
+        }
+
+        /* AR Reticle Dwell Progress Ring Animation */
+        .dwell-ring {
+            transition: stroke-dashoffset 0.1s linear;
+        }
+
+        /* Interactive Target Select Glow */
+        .target-hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: #0284C7;
+            box-shadow: 0 0 20px rgba(2, 132, 199, 0.3);
+        }
+
+        .word-drone {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Writing Canvas Styling */
+        #writingCanvas {
+            touch-action: none;
+            cursor: crosshair;
+            background-color: #FFFDF9;
+            border-radius: 1rem;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94A3B8;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden bg-slate-100">
+
+    <!-- HEADER HUD -->
+    <header class="w-full bg-slate-900 text-white py-3 px-4 md:px-8 border-b-4 border-cyan-500 sticky top-0 z-30 shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- Left: Title & Mission Counter -->
+            <div class="flex items-center space-x-4">
+                <div class="bg-cyan-900/80 p-2.5 rounded-xl border border-cyan-400/40 text-cyan-300 flex items-center justify-center">
+                    <i class="fa-solid me-2 fa-microchip text-xl"></i>
+                    <span class="font-bold text-sm tracking-wider hidden sm:inline">PENA DIGITAL</span>
+                </div>
+                <div>
+                    <span class="text-xs text-cyan-300 uppercase tracking-widest font-semibold block">KEMAJUAN MISI</span>
+                    <div class="flex items-center space-x-2">
+                        <span id="hudMissionText" class="text-lg font-extrabold text-white">MISI 1 / 10</span>
+                        <!-- Progress Nodes -->
+                        <div id="progressNodes" class="flex items-center space-x-1.5 ml-2">
+                            <!-- 10 Nodes inserted via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Interactive Audio & Camera Controls -->
+            <div class="flex items-center space-x-3">
+                <button id="btnAudioToggle" onclick="toggleAudio()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 text-sm font-semibold flex items-center gap-2 transition active:scale-95" title="Sokongan Audio BM">
+                    <i id="audioIcon" class="fa-solid fa-volume-high text-lg"></i>
+                    <span id="audioStatusText" class="hidden md:inline">AUDIO ON</span>
+                </button>
+                <button id="btnCameraToggle" onclick="toggleCameraMode()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-300 text-sm font-semibold flex items-center gap-2 transition active:scale-95" title="Mod Kawalan Tangan AR">
+                    <i id="cameraIcon" class="fa-solid fa-camera text-lg"></i>
+                    <span id="cameraStatusText" class="hidden md:inline">MOD AR</span>
+                </button>
+            </div>
+
+            <!-- Right: Score & Stars -->
+            <div class="flex items-center space-x-5">
+                <div class="text-right">
+                    <span class="text-xs text-slate-400 uppercase tracking-widest font-semibold block">SKOR SIBER</span>
+                    <span id="hudScore" class="text-xl font-extrabold text-amber-400">0</span>
+                </div>
+                <div class="flex items-center space-x-1 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-amber-400/30">
+                    <i class="fa-solid fa-star text-amber-400 text-lg"></i>
+                    <span id="hudStars" class="font-bold text-lg text-white">0</span>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- MAIN INTERACTIVE CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 relative">
+
+        <!-- AR Video Feed & Cyber Pen Pointer Tracking Overlay (Hidden or Overlay Window) -->
+        <div id="arOverlayContainer" class="hidden fixed bottom-4 right-4 w-64 h-48 rounded-2xl overflow-hidden border-2 border-cyan-400 shadow-2xl z-40 bg-black/80 backdrop-blur">
+            <video id="webcam" class="w-full h-full object-cover transform -scale-x-100" autoplay playsinline muted></video>
+            <canvas id="arCanvas" class="absolute top-0 left-0 w-full h-full transform -scale-x-100 pointer-events-none"></canvas>
+            <div class="absolute top-2 left-2 bg-slate-900/90 text-cyan-300 text-[10px] px-2 py-0.5 rounded-md border border-cyan-500/30 font-mono">
+                <i class="fa-solid fa-hand text-xs me-1"></i> GAUNTLET READY
+            </div>
+        </div>
+
+        <!-- Virtual AR Hand Reticle / Pointer for Dwell Selection -->
+        <div id="arPointer" class="pointer-events-none fixed z-50 transform -translate-x-1/2 -translate-y-1/2 hidden transition-transform duration-75">
+            <div class="relative w-12 h-12 flex items-center justify-center">
+                <!-- Target Reticle Outer Ring -->
+                <svg class="w-full h-full -rotate-90">
+                    <circle cx="24" cy="24" r="20" stroke="rgba(6, 182, 212, 0.3)" stroke-width="4" fill="none" />
+                    <circle id="dwellRingProgress" class="dwell-ring" cx="24" cy="24" r="20" stroke="#06B6D4" stroke-width="4" fill="none" stroke-dasharray="125.6" stroke-dashoffset="125.6" stroke-linecap="round" />
+                </svg>
+                <!-- Center Pointer Bead -->
+                <div class="absolute w-4 h-4 bg-cyan-400 rounded-full border-2 border-white shadow-[0_0_12px_#06B6D4]"></div>
+            </div>
+            <div id="arPointerLabel" class="bg-slate-900/90 text-cyan-300 text-[11px] font-bold px-2 py-0.5 rounded shadow border border-cyan-400 mt-1 text-center whitespace-nowrap">
+                MENUNGGU
+            </div>
+        </div>
+
+        <!-- LEFT/TOP PANEL: Learning Situation Visual & Cikgu NARA Guide -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            
+            <!-- Cikgu NARA AI Guide Box -->
+            <div class="cyber-glass rounded-2xl p-4 sm:p-5 flex items-start gap-4 shadow-md border-l-8 border-l-cyan-500">
+                <div class="relative flex-shrink-0">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold shadow-md border-2 border-white">
+                        🤖
+                    </div>
+                    <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold">✓</span>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-bold text-cyan-700 tracking-wider uppercase">CIKGU NARA — AI PEMBIMBING</span>
+                        <button onclick="speakInstruction()" class="text-cyan-700 hover:text-cyan-900 bg-cyan-100 hover:bg-cyan-200 p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition">
+                            <i class="fa-solid fa-volume-high"></i>
+                            <span class="hidden sm:inline">Ulang Arahan</span>
+                        </button>
+                    </div>
+                    <p id="cikguNaraText" class="text-slate-800 font-semibold text-base sm:text-lg leading-snug">
+                        "Selamat datang! Mari kita mulakan Operasi Pena Digital. Lihat gambar di sebelah."
+                    </p>
+                </div>
+            </div>
+
+            <!-- Learning Situation Visual Card -->
+            <div class="cyber-glass rounded-2xl p-4 flex flex-col items-center justify-center shadow-md min-h-[220px] sm:min-h-[280px] relative overflow-hidden bg-white/80">
+                <div class="absolute top-3 left-3 bg-slate-800 text-white text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-eye text-cyan-400"></i>
+                    <span>SITUASI VISUAL</span>
+                </div>
+                
+                <!-- Dynamic Visual Display (SVG Illustrative Art) -->
+                <div id="visualDisplayContainer" class="w-full flex flex-col items-center justify-center py-2">
+                    <!-- SVG Illustration injected here -->
+                </div>
+
+                <div id="visualCaption" class="mt-2 text-center text-slate-700 font-bold text-sm bg-slate-100 px-4 py-1.5 rounded-xl border border-slate-200">
+                    Pemerhatian Situasi
+                </div>
+            </div>
+
+            <!-- Dyslexia Scaffolding / Hint Box -->
+            <div class="bg-amber-50/90 rounded-2xl p-4 border-2 border-amber-300 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-lightbulb text-amber-500 text-base"></i> BANTUAN SIBER (SCAFFOLDING)
+                    </span>
+                    <button id="btnHint" onclick="requestScaffoldingHint()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition shadow active:scale-95 flex items-center gap-1">
+                        <span>💡 MINTA PETUNJUK</span>
+                        <span id="hintBadge" class="bg-amber-700 text-white text-[10px] px-1.5 py-0.2 rounded-full">1/4</span>
+                    </button>
+                </div>
+                <p id="scaffoldingBoxText" class="text-xs sm:text-sm text-amber-900 font-medium italic">
+                    Tekan butang 'Minta Petunjuk' jika kamu memerlukan bantuan jawapan secara berperingkat.
+                </p>
+            </div>
+
+        </section>
+
+        <!-- RIGHT PANEL: Mission Task Container & Interaction Workspace -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            
+            <div class="cyber-glass rounded-2xl p-5 shadow-lg flex flex-col justify-between min-h-[450px]">
+                
+                <!-- Mission Title Header -->
+                <div class="border-b-2 border-slate-200 pb-3 mb-4 flex items-center justify-between">
+                    <div>
+                        <span id="missionTypeBadge" class="bg-blue-100 text-blue-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                            MISI A — KENAL PERKATAAN
+                        </span>
+                        <h2 id="missionTitle" class="text-xl sm:text-2xl font-bold text-slate-800 mt-1">
+                            Pilih Perkataan Yang Sesuai
+                        </h2>
+                    </div>
+                    <div class="hidden sm:block text-right">
+                        <span class="text-[11px] text-slate-500 block uppercase font-bold">Standard Pembelajaran</span>
+                        <span class="text-xs font-bold text-slate-700">SK 3.2 | SP 3.2.1</span>
+                    </div>
+                </div>
+
+                <!-- DYNAMIC MISSION CONTENT AREA (Swaps based on Mission Type) -->
+                <div id="missionWorkspace" class="flex-grow flex flex-col justify-center items-center my-2 w-full">
+                    <!-- Interactive content loaded dynamically via JavaScript -->
+                </div>
+
+                <!-- DIGITAL WRITING CANVAS SECTION (Displayed during Writing Missions F/10) -->
+                <div id="canvasWritingSection" class="hidden flex-col w-full gap-3 mt-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-700 uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-nib text-cyan-600"></i> PAPAN TULISAN DIGITAL (GUNAKAN TETIKUS / STYLUS / SENTUHAN)
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-cyan-500 inline-block"></span>
+                            <span class="text-xs text-slate-500 font-medium">Dakwat Siber</span>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Board -->
+                    <div class="relative w-full rounded-2xl overflow-hidden border-2 border-cyan-300 bg-amber-50/30 p-1 shadow-inner">
+                        <canvas id="writingCanvas" class="w-full h-44 sm:h-52 rounded-xl"></canvas>
+                        
+                        <!-- Writing Guidelines Helper Lines Overlay -->
+                        <div class="pointer-events-none absolute inset-0 flex flex-col justify-around px-4 opacity-20">
+                            <div class="border-b border-cyan-800 border-dashed w-full h-0"></div>
+                            <div class="border-b-2 border-red-400 border-solid w-full h-0"></div>
+                            <div class="border-b border-cyan-800 border-dashed w-full h-0"></div>
+                        </div>
+                    </div>
+
+                    <!-- Writing Toolbar Controls -->
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="undoCanvas()" class="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs flex items-center gap-1 transition">
+                                <i class="fa-solid fa-rotate-left"></i> UNDO
+                            </button>
+                            <button onclick="clearCanvas()" class="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-xs flex items-center gap-1 transition">
+                                <i class="fa-solid fa-trash"></i> KOSONGKAN
+                            </button>
+                            <button onclick="clearCanvas()" class="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs flex items-center gap-1 transition">
+                                <i class="fa-solid fa-arrows-rotate"></i> CUBA SEMULA
+                            </button>
+                        </div>
+                        <div>
+                            <button onclick="openSelfCheckModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm flex items-center gap-1.5 shadow transition active:scale-95">
+                                <i class="fa-solid fa-circle-check"></i> SEMAK AYAT & HANTAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Action Bar for non-writing missions -->
+                <div id="standardActionBar" class="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center">
+                    <span class="text-xs text-slate-500 font-medium">
+                        <i class="fa-solid fa-hand-pointer text-cyan-600 me-1"></i> Sentuh / Klik atau gunakan Tangan AR
+                    </span>
+                    <button id="btnSubmitMission" onclick="checkCurrentAnswer()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-extrabold text-sm sm:text-base shadow-lg transition active:scale-95 flex items-center gap-2">
+                        <span>SEMAK JAWAPAN</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- START GAME MODAL -->
+    <div id="startModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="cyber-glass-dark max-w-2xl w-full rounded-3xl p-6 sm:p-8 shadow-2xl border-2 border-cyan-400 flex flex-col items-center text-center">
+            
+            <div class="w-20 h-20 rounded-3xl bg-cyan-500/20 border-2 border-cyan-400 flex items-center justify-center text-cyan-300 text-4xl mb-4 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+                <i class="fa-solid fa-feather-pointed"></i>
+            </div>
+
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-1">
+                MISI AYAT SIBER
+            </h1>
+            <h2 class="text-lg sm:text-xl font-bold text-cyan-400 mb-4 tracking-wider">
+                OPERASI PENA DIGITAL — BAHASA MELAYU TAHUN 5
+            </h2>
+
+            <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-6 max-w-xl">
+                Bantu Cikgu NARA membina dan menulis ayat Bahasa Melayu yang bermakna. Permainan ini direka khas dengan huruf mesra disleksia dan panduan bergambar.
+            </p>
+
+            <!-- How to Play Quick Steps -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 w-full mb-6">
+                <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 text-center">
+                    <div class="text-lg">👀</div>
+                    <div class="text-[11px] font-bold text-cyan-300 mt-1">1. Lihat Gambar</div>
+                </div>
+                <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 text-center">
+                    <div class="text-lg">✋</div>
+                    <div class="text-[11px] font-bold text-cyan-300 mt-1">2. Pilih Perkataan</div>
+                </div>
+                <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 text-center">
+                    <div class="text-lg">🧩</div>
+                    <div class="text-[11px] font-bold text-cyan-300 mt-1">3. Susun Ayat</div>
+                </div>
+                <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 text-center">
+                    <div class="text-lg">✏️</div>
+                    <div class="text-[11px] font-bold text-cyan-300 mt-1">4. Tulis Digital</div>
+                </div>
+                <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 text-center col-span-2 sm:col-span-1">
+                    <div class="text-lg">✅</div>
+                    <div class="text-[11px] font-bold text-cyan-300 mt-1">5. Semak Jawapan</div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-4 w-full">
+                <button onclick="startGame(true)" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-base sm:text-lg shadow-lg hover:shadow-cyan-500/25 transition transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-3">
+                    <i class="fa-solid fa-camera"></i> MULA DENGAN KAMERA AR
+                </button>
+                <button onclick="startGame(false)" class="px-6 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-base border border-slate-600 transition active:scale-95 flex items-center gap-2">
+                    <i class="fa-solid fa-mouse-pointer"></i> GUNA TETIKUS / SENTUHAN
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CAMERA INITIALIZING LOADING MODAL -->
+    <div id="loadingModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div class="cyber-glass-dark max-w-md w-full rounded-3xl p-6 text-center border border-cyan-500/40">
+            <div class="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-white mb-2">MENGAKTIFKAN KAMERA AR...</h3>
+            <p id="loadingStatusText" class="text-xs text-cyan-300 mb-4 font-mono">Mengesan MediaPipe Hands & Menyediakan Ruang...</p>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div id="loadingBar" class="bg-cyan-400 h-full w-1/3 transition-all duration-300"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CAMERA ERROR FALLBACK MODAL -->
+    <div id="cameraErrorModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div class="cyber-glass-dark max-w-md w-full rounded-3xl p-6 text-center border border-rose-500">
+            <div class="text-rose-400 text-4xl mb-3"><i class="fa-solid fa-video-slash"></i></div>
+            <h3 class="text-lg font-bold text-white mb-2">KAMERA TIDAK DAPAT DIAKTIFKAN</h3>
+            <p class="text-xs text-slate-300 mb-6">Jangan risau! Kamu masih boleh terus belajar dan membina ayat menggunakan tetikus, skrin sentuh atau stylus.</p>
+            <div class="flex justify-center gap-3">
+                <button onclick="retryCamera()" class="px-4 py-2 bg-slate-800 text-cyan-300 font-bold text-xs rounded-xl border border-slate-600">CUBA SEMULA</button>
+                <button onclick="proceedWithoutCamera()" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl shadow">TERUSKAN PERMAINAN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SELF CHECK CHECKLIST MODAL (Before Final Submit) -->
+    <div id="selfCheckModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="cyber-glass max-w-lg w-full rounded-3xl p-6 shadow-2xl border-2 border-emerald-400">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl font-bold">
+                    📋
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800">SEMAK AYAT KENDIRI</h3>
+                    <p class="text-xs text-slate-600">Sila pastikan perkara berikut sebelum hantar:</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 my-5">
+                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                    <input type="checkbox" id="chkCap" class="w-5 h-5 accent-emerald-600 rounded">
+                    <span class="text-sm font-semibold text-slate-800">Huruf besar pada permulaan ayat?</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                    <input type="checkbox" id="chkOrder" class="w-5 h-5 accent-emerald-600 rounded">
+                    <span class="text-sm font-semibold text-slate-800">Susunan perkataan betul & faham?</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                    <input type="checkbox" id="chkMeaning" class="w-5 h-5 accent-emerald-600 rounded">
+                    <span class="text-sm font-semibold text-slate-800">Ayat mempunyai makna yang jelas?</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                    <input type="checkbox" id="chkPeriod" class="w-5 h-5 accent-emerald-600 rounded">
+                    <span class="text-sm font-semibold text-slate-800">Tanda noktah (.) di akhir ayat?</span>
+                </label>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeSelfCheckModal()" class="px-4 py-2 bg-slate-200 text-slate-700 font-bold text-xs rounded-xl">BAMBATAN</button>
+                <button onclick="confirmWritingSubmit()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow">✅ HANTAR JAWAPAN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VICTORY / SUMMARY MODAL -->
+    <div id="victoryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto">
+        <div class="cyber-glass max-w-3xl w-full rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-amber-400 my-8">
+            <div class="text-center mb-6">
+                <div class="text-6xl mb-2 animate-bounce">🏆</div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900">MISI SELESAI — TAHNIAH!</h1>
+                <p class="text-amber-700 font-bold text-base mt-1">Kamu Berjaya Membina & Menulis Ayat Bahasa Melayu!</p>
+            </div>
+
+            <!-- Performance Stats -->
+            <div class="grid grid-cols-3 gap-3 mb-6 bg-amber-50/80 p-4 rounded-2xl border border-amber-200 text-center">
+                <div>
+                    <span class="text-xs text-slate-500 font-bold uppercase block">SKOR AKHIR</span>
+                    <span id="victoryScore" class="text-2xl font-extrabold text-cyan-700">0</span>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-500 font-bold uppercase block">MISI SELESAI</span>
+                    <span class="text-2xl font-extrabold text-emerald-700">10 / 10</span>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-500 font-bold uppercase block">BINTANG</span>
+                    <span id="victoryStars" class="text-2xl font-extrabold text-amber-500">⭐⭐⭐</span>
+                </div>
+            </div>
+
+            <!-- Learned Sentences Summary -->
+            <div class="mb-6">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-book-bookmark text-cyan-600"></i> RINGKASAN AYAT YANG DIPELAJARI (SUBJEK & PREDIKAT)
+                </h3>
+                <div id="victorySentencesList" class="max-h-60 overflow-y-auto space-y-2 pr-1">
+                    <!-- Dynamic summary items inserted via JS -->
+                </div>
+            </div>
+
+            <!-- Navigation Actions -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <button onclick="restartGame()" class="p-3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow text-center">
+                    <i class="fa-solid fa-rotate-right block text-base mb-1"></i> MAIN SEMULA
+                </button>
+                <button onclick="openReviewMode()" class="p-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm rounded-xl shadow text-center">
+                    <i class="fa-solid fa-book-open block text-base mb-1"></i> ULANG KAJI
+                </button>
+                <button onclick="openWritingPractice()" class="p-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow text-center">
+                    <i class="fa-solid fa-pen-fancy block text-base mb-1"></i> LATIHAN MENULIS
+                </button>
+                <button onclick="location.reload()" class="p-3 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs sm:text-sm rounded-xl shadow text-center">
+                    <i class="fa-solid fa-house block text-base mb-1"></i> MENU UTAMA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REVIEW MODE OVERLAY MODAL -->
+    <div id="reviewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="cyber-glass max-w-2xl w-full rounded-3xl p-6 shadow-2xl border-2 border-amber-400">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+                <h3 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                    📚 MOD ULANG KAJI AYAT SIBER
+                </h3>
+                <button onclick="closeReviewMode()" class="text-slate-500 hover:text-slate-800 text-xl font-bold">✕</button>
+            </div>
+
+            <div id="reviewContent" class="space-y-4">
+                <!-- Injected dynamically -->
+            </div>
+
+            <div class="mt-6 text-right">
+                <button onclick="closeReviewMode()" class="px-6 py-2 bg-slate-800 text-white font-bold text-xs rounded-xl">TUTUP ULANG KAJI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER CREDITS -->
+    <footer class="w-full bg-slate-900 text-slate-400 text-[11px] py-2 text-center border-t border-slate-800">
+        MISI AYAT SIBER — Operasi Pena Digital | Standard Kandungan 3.2 Bahasa Melayu Tahun 5 Dyslexia-Friendly
+    </footer>
+
+    <script>
+        // GLOBAL GAME STATE & DATA
+        let currentMissionIndex = 0;
+        let score = 0;
+        let stars = 0;
+        let scaffoldingLevel = 0; // 0 to 4 hints used
+        let isAudioEnabled = true;
+        let isCameraActive = false;
+
+        // MediaPipe & AR Tracking State
+        let videoElement = null;
+        let arCanvas = null;
+        let arCtx = null;
+        let cameraUtils = null;
+        let handsInstance = null;
+        let dwellTimer = null;
+        let dwellTargetElement = null;
+        let dwellStartTime = 0;
+        const DWELL_THRESHOLD_MS = 750; // 0.75 seconds dwell time
+
+        // Canvas Writing State
+        let writingCanvas = null;
+        let writingCtx = null;
+        let isDrawing = false;
+        let strokeHistory = [];
+
+        // 10 GRADUATED MISSIONS DATA
+        const missions = [
+            {
+                id: 1,
+                type: 'A',
+                title: 'Misi 1: Kenal Perkataan (Tindakan)',
+                instruction: 'Lihat gambar. Apakah perkataan tindakan yang paling sesuai?',
+                subject: 'Aiman',
+                predicate: 'membaca buku',
+                fullSentence: 'Aiman membaca buku di perpustakaan.',
+                options: ['membaca', 'berlari', 'memasak'],
+                correctIndex: 0,
+                svgArt: `
+                    <svg class="w-48 h-36" viewBox="0 0 200 150">
+                        <rect width="200" height="150" fill="#E2E8F0" rx="12"/>
+                        <!-- Boy reading book visual -->
+                        <circle cx="100" cy="50" r="22" fill="#FDBA74"/>
+                        <path d="M70 110 C70 80, 130 80, 130 110 Z" fill="#0284C7"/>
+                        <!-- Book -->
+                        <polygon points="75,85 100,92 125,85 125,105 100,112 75,105" fill="#38BDF8"/>
+                        <line x1="100" y1="92" x2="100" y2="112" stroke="#0284C7" stroke-width="2"/>
+                    </svg>
+                `,
+                caption: 'Seorang murid lelaki memegang buku.',
+                hints: [
+                    "Perhatikan gambar secara teliti.",
+                    "Perkataan penting: membaca.",
+                    "Struktur: Siapa (Aiman) + buat apa (membaca).",
+                    "Permulaan: Aiman membaca..."
+                ]
+            },
+            {
+                id: 2,
+                type: 'A',
+                title: 'Misi 2: Kenal Perkataan (Objek)',
+                instruction: 'Lihat gambar. Apakah yang disiram oleh Siti?',
+                subject: 'Siti',
+                predicate: 'menyiram pokok bunga',
+                fullSentence: 'Siti menyiram pokok bunga di halaman.',
+                options: ['kereta', 'pokok bunga', 'buku'],
+                correctIndex: 1,
+                svgArt: `
+                    <svg class="w-48 h-36" viewBox="0 0 200 150">
+                        <rect width="200" height="150" fill="#F1F5F9" rx="12"/>
+                        <!-- Flower pot visual -->
+                        <path d="M85 120 L115 120 L120 85 L80 85 Z" fill="#D97706"/>
+                        <circle cx="100" cy="70" r="18" fill="#10B981"/>
+                        <circle cx="90" cy="65" r="8" fill="#F43F5E"/>
+                        <circle cx="110" cy="65" r="8" fill="#F43F5E"/>
+                        <!-- Watering Can -->
+                        <rect x="130" y="60" width="25" height="20" rx="4" fill="#06B6D4"/>
+                    </svg>
+                `,
+                caption: 'Siti sedang memegang penyiram air di sebelah tumbuhan.',
+                hints: [
+                    "Lihat pokok dalam pasu.",
+                    "Perkataan penting: pokok bunga.",
+                    "Struktur: Siti + menyiram + pokok bunga.",
+                    "Permulaan: Siti menyiram..."
+                ]
+            },
+            {
+                id: 3,
+                type: 'B',
+                title: 'Misi 3: Pilih Frasa Tepat',
+                instruction: 'Pilih frasa yang menerangkan perbuatan dalam gambar.',
+                subject: 'Hakim',
+                predicate: 'bermain bola',
+                fullSentence: 'Hakim bermain bola di padang.',
+                options: ['bermain bola', 'membaca majalah', 'mencuci kereta'],
+                correctIndex: 0,
+                svgArt: `
+                    <svg class="w-48 h-36" viewBox="0 0 200 150">
+                        <rect width="200" height="150" fill="#DCFCE7" rx="12"/>
+                        <!-- Soccer ball -->
+                        <circle cx="100" cy="90" r="22" fill="#FFFFFF" stroke="#0F172A" stroke-width="3"/>
+                        <polygon points="100,78 108,84 105,94 95,94 92,84" fill="#0F172A"/>
+                    </svg>
+                `,
+                caption: 'Sebiji bola sepak di atas padang rumput hijau.',
+                hints: [
+                    "Ini adalah sukan yang ditendang.",
+                    "Frasa penting: bermain bola.",
+                    "Struktur: Hakim + bermain bola.",
+                    "Permulaan: Hakim bermain..."
+                ]
+            },
+            {
+                id: 4,
+                type: 'B',
+                title: 'Misi 4: Pilih Frasa Tempat',
+                instruction: 'Di manakah murid ini belajar?',
+                subject: 'Murid-murid',
+                predicate: 'belajar di dalam kelas',
+                fullSentence: 'Murid-murid belajar di dalam kelas.',
+                options: ['di dalam kelas', 'di kolam renang', 'di dapur'],
+                correctIndex: 0,
+                svgArt: `
+                    <svg class="w-48 h-36" viewBox="0 0 200 150">
+                        <rect width="200" height="150" fill="#FEF3C7" rx="12"/>
+                        <!-- Classroom Board -->
+                        <rect x="40" y="30" width="120" height="60" rx="4" fill="#065F46"/>
+                        <text x="100" y="65" font-size="14" fill="#FFFFFF" text-anchor="middle" font-family="Lexend">ABC 123</text>
+                    </svg>
+                `,
+                caption: 'Papan hitam tempat belajar di sekolah.',
+                hints: [
+                    "Lihat papan hitam.",
+                    "Frasa tempat: di dalam kelas.",
+                    "Struktur: Murid + belajar + di dalam kelas.",
+                    "Permulaan: Murid-murid belajar..."
+                ]
+            },
+            {
+                id: 5,
+                type: 'C',
+                title: 'Misi 5: Susun Perkataan',
+                instruction: 'Susun perkataan berikut menjadi ayat yang betul.',
+                subject: 'Aina',
+                predicate: 'membantu ibu di dapur',
+                fullSentence: 'Aina membantu ibu di dapur.',
+                words: ['Aina', 'membantu', 'ibu', 'di dapur'],
+                correctOrder: [0, 1, 2, 3],
+                svgArt: `
+                    <svg class="w-48 h-36" viewBox="0 0 200 150">
+                        <rect width="200" height="150" fill="#FFEDD5" rx="12"/>
+                        <!-- Kitchen utensils -->
+                        <path d="M70 50 L70 100 M90 50 L90 100 M110 50 L110 100" stroke="#EA580C" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                `,
+                caption: 'Aina membantu ibunya di ruang dapur.',
+                hints: [
+                    "Mulakan dengan nama orang (Subjek).",
+                    "Perkataan: Aina + membantu + ibu...",
+                    "Susunan: Aina + membantu + ibu + di dapur.",
+                    "Ayat penuh: Aina membantu ibu di dapur."
+                ]
+            },
+            {
+                id: 6,
+                type: 'C',
+                title: 'Misi 6: Susun Perkataan Tempat',
+                instruction: 'Susun unit perkataan drone menjadi ayat lengkap.',
+                subject: 'Amir',
+                predicate: 'membuang sampah ke dalam tong sampah',
+                fullSentence: 'Amir membuang sampah ke dalam tong.',
+                words: ['Amir', 'membuang', 'sampah', 'ke dalam tong'],
+                correctOrder: [0, 1, 2, 3],
+                svgArt: `
+                    <svg class="w-48 h-36" viewBox="0 0 200 150">
+                        <rect width="200" height="150" fill="#E0F2FE" rx="12"/>
+                        <!-- Dustbin -->
+                        <rect x="80" y="60" width="40" height="60" rx="6" fill="#0284C7"/>
+                        <path d="M75 55 L125 55" stroke="#0369A1" stroke-width="6"/>
+                    </svg>
+                `,
+                caption: 'Amir menjaga kebersihan dengan membuang sampah.',
+                hints: [
+                    "Siapa yang buat? (Amir)",
+                    "Apakah perbuatannya? (membuang sampah)",
+                    "Di mana? (ke dalam tong)",
+                    "Ayat: Amir membuang sampah ke dalam tong."
+                ]
+            },
+            {
+                id: 7,
+                type: 'D',
+                title: 'Misi 7: Lengkapkan Ayat',
+                instruction: 'Isi tempat kosong dengan perkataan paling sesuai.',
+                subject: 'Keluarga Ali',
+                predicate: 'berkelah di tepi pantai',
+                fullSentence: 'Keluarga Ali berkelah di tepi pantai.',
+                fillSentence: 'Keluarga Ali ______ di tepi pantai.',
+                options: ['berkelah', 'tidur', 'memandu'],
+                correctIndex: 0,
+                svgArt: `
+                    <svg class="w-48 h-36" viewBox="0 0 200 150">
+                        <rect width="200" height="150" fill="#BAE6FD" rx="12"/>
+                        <!-- Beach Umbrella -->
+                        <path d="M60 90 L140 90 C140 60 60 60 60 90 Z" fill="#F43F5E"/>
+                        <line x1="100" y1="90" x2="100" y2="130" stroke="#78350F" stroke-width="4"/>
+                    </svg>
+                `,
+                caption: 'Aktiviti rekreasi keluarga di kawasan pantai.',
+                hints: [
+                    "Aktiviti santai bersama keluarga di pantai.",
+                    "Perkataan sesuai: berkelah.",
+                    "Keluarga Ali + berkelah + di tepi pantai.",
+                    "Permulaan: Keluarga Ali berkelah..."
+                ]
+            },
+            {
+                id: 8,
+                type: 'E',
+                title: 'Misi 8: Bina Ayat Gambar',
+                instruction: 'Bina ayat yang lengkap berdasarkan perkataan yang disediakan.',
+                subject: 'Raju',
+                predicate: 'menunggang basikal dengan berhati-hati',
+                fullSentence: 'Raju menunggang basikal dengan berhati-hati.',
+                words: ['Raju', 'menunggang', 'basikal', 'dengan berhati-hati'],
+                correctOrder: [0, 1, 2, 3],
+                svgArt: `
+                    <svg class="w-48 h-36" viewBox="0 0 200 150">
+                        <rect width="200" height="150" fill="#FEF08A" rx="12"/>
+                        <!-- Bicycle Wheels -->
+                        <circle cx="65" cy="100" r="22" stroke="#0F172A" stroke-width="4" fill="none"/>
+                        <circle cx="135" cy="100" r="22" stroke="#0F172A" stroke-width="4" fill="none"/>
+                        <path d="M65 100 L95 100 L115 75 L135 100" stroke="#0284C7" stroke-width="4" fill="none"/>
+                    </svg>
+                `,
+                caption: 'Raju sedang menaiki kenderaan dua roda.',
+                hints: [
+                    "Gabungkan perkataan menjadi ayat lengkap.",
+                    "Gunakan kosa kata: Raju + menunggang...",
+                    "Subjek: Raju | Predikat: menunggang basikal...",
+                    "Semak ayat: Raju menunggang basikal dengan berhati-hati."
+                ]
+            },
+            {
+                id: 9,
+                type: 'E',
+                title: 'Misi 9: Bina Ayat Situasi Kemasyarakatan',
+                instruction: 'Pilih dan bina ayat membantu warga emas.',
+                subject: 'Adam',
+                predicate: 'membantu warga emas membawa barang',
+                fullSentence: 'Adam membantu warga emas membawa barang.',
+                words: ['Adam', 'membantu', 'warga emas', 'membawa barang'],
+                correctOrder: [0, 1, 2, 3],
+                svgArt: `
+                    <svg class="w-48 h-36" viewBox="0 0 200 150">
+                        <rect width="200" height="150" fill="#E9D5FF" rx="12"/>
+                        <!-- Helping icon -->
+                        <path d="M70 80 Q100 50 130 80 T100 120 Z" fill="#A855F7"/>
+                    </svg>
+                `,
+                caption: 'Amalan murni membantu orang tua.',
+                hints: [
+                    "Siapa yang dibantu? (warga emas)",
+                    "Siapa yang membantu? (Adam)",
+                    "Subjek: Adam | Predikat: membantu warga emas...",
+                    "Ayat: Adam membantu warga emas membawa barang."
+                ]
+            },
+            {
+                id: 10,
+                type: 'F',
+                title: 'Misi 10: Misi Akhir — Menulis Berdikari',
+                instruction: 'Tulis ayat lengkap pada Papan Digital berdasarkan gambar!',
+                subject: 'Mei Ling',
+                predicate: 'meminjam buku di perpustakaan',
+                fullSentence: 'Mei Ling meminjam buku di perpustakaan.',
+                helperWords: ['Mei Ling', 'meminjam buku', 'di perpustakaan'],
+                svgArt: `
+                    <svg class="w-48 h-36" viewBox="0 0 200 150">
+                        <rect width="200" height="150" fill="#CCFBF1" rx="12"/>
+                        <!-- Library Shelves -->
+                        <rect x="40" y="30" width="120" height="90" rx="4" fill="#0D9488"/>
+                        <line x1="40" y1="60" x2="160" y2="60" stroke="#F0FDFA" stroke-width="4"/>
+                        <line x1="40" y1="90" x2="160" y2="90" stroke="#F0FDFA" stroke-width="4"/>
+                    </svg>
+                `,
+                caption: 'Mei Ling berada di pusat sumber / perpustakaan sekolah.',
+                hints: [
+                    "Gunakan perkataan bantuan yang diberikan.",
+                    "Bina ayat: Subjek (Mei Ling) + Predikat.",
+                    "Gunakan papan tulisan digital di bawah.",
+                    "Pastikan ada Huruf Besar dan Tanda Noktah."
+                ]
+            }
+        ];
+
+        // INITIALIZE APPLICATION ON WINDOW LOAD
+        window.onload = function() {
+            initProgressNodes();
+            initWritingCanvas();
+            renderMission(currentMissionIndex);
+            updateHUD();
+        };
+
+        // Render Top HUD Progress Nodes
+        function initProgressNodes() {
+            const container = document.getElementById('progressNodes');
+            container.innerHTML = '';
+            for (let i = 0; i < 10; i++) {
+                const node = document.createElement('div');
+                node.id = `node-${i}`;
+                node.className = `w-3 h-3 rounded-full transition-all duration-300 ${i === 0 ? 'bg-cyan-400 scale-125 ring-2 ring-cyan-200' : 'bg-slate-700'}`;
+                container.appendChild(node);
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('hudMissionText').innerText = `MISI ${currentMissionIndex + 1} / 10`;
+            document.getElementById('hudScore').innerText = score;
+            document.getElementById('hudStars').innerText = '⭐'.repeat(stars);
+
+            for (let i = 0; i < 10; i++) {
+                const node = document.getElementById(`node-${i}`);
+                if (i < currentMissionIndex) {
+                    node.className = 'w-3 h-3 rounded-full bg-emerald-400';
+                } else if (i === currentMissionIndex) {
+                    node.className = 'w-3 h-3 rounded-full bg-cyan-400 scale-125 ring-2 ring-cyan-200';
+                } else {
+                    node.className = 'w-3 h-3 rounded-full bg-slate-700';
+                }
+            }
+        }
+
+        // Web Speech API Voice Guidance (BM)
+        function speakInstruction() {
+            if (!isAudioEnabled) return;
+            const mission = missions[currentMissionIndex];
+            const textToSpeak = `${mission.instruction}`;
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop any ongoing speech
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                utterance.lang = 'ms-MY';
+                utterance.rate = 0.85; // Slightly slower speed for dyslexia accessibility
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function toggleAudio() {
+            isAudioEnabled = !isAudioEnabled;
+            const icon = document.getElementById('audioIcon');
+            const label = document.getElementById('audioStatusText');
+            if (isAudioEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-lg';
+                label.innerText = 'AUDIO ON';
+                speakInstruction();
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-lg text-rose-400';
+                label.innerText = 'AUDIO OFF';
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            }
+        }
+
+        // RENDER CURRENT MISSION INTERFACE
+        let selectedWordIndices = [];
+
+        function renderMission(index) {
+            const mission = missions[index];
+            scaffoldingLevel = 0;
+            selectedWordIndices = [];
+
+            // Reset Scaffolding Text
+            document.getElementById('scaffoldingBoxText').innerText = "Tekan 'Minta Petunjuk' jika kamu memerlukan bantuan secara berperingkat.";
+            document.getElementById('hintBadge').innerText = `0/4`;
+
+            // Update Cikgu NARA Instruction
+            document.getElementById('cikguNaraText').innerText = `"${mission.instruction}"`;
+
+            // Update Header Type & Title
+            document.getElementById('missionTypeBadge').innerText = getMissionBadgeText(mission.type);
+            document.getElementById('missionTitle').innerText = mission.title;
+
+            // Update Situation Visual SVG & Caption
+            document.getElementById('visualDisplayContainer').innerHTML = mission.svgArt;
+            document.getElementById('visualCaption').innerText = mission.caption;
+
+            // Toggle Writing Canvas vs Standard Drone Workspace
+            const workspace = document.getElementById('missionWorkspace');
+            const canvasSection = document.getElementById('canvasWritingSection');
+            const standardActionBar = document.getElementById('standardActionBar');
+
+            workspace.innerHTML = '';
+
+            if (mission.type === 'F' || index === 9) {
+                // Writing Mission
+                canvasSection.classList.remove('hidden');
+                canvasSection.classList.add('flex');
+                standardActionBar.classList.add('hidden');
+                clearCanvas();
+
+                // Helper word tags for writing
+                const helperContainer = document.createElement('div');
+                helperContainer.className = "flex flex-wrap gap-2 mb-3 justify-center w-full";
+                helperContainer.innerHTML = `<span class="text-xs font-bold text-slate-500 w-full text-center">Perkataan Bantuan:</span>`;
+                mission.helperWords.forEach(word => {
+                    helperContainer.innerHTML += `
+                        <span class="px-3 py-1 bg-amber-100 border border-amber-300 text-amber-900 rounded-xl font-bold text-sm shadow-sm">
+                            ${word}
+                        </span>
+                    `;
+                });
+                workspace.appendChild(helperContainer);
+
+            } else {
+                // Standard Multiple Choice / Drag & Select Drones
+                canvasSection.classList.add('hidden');
+                canvasSection.classList.remove('flex');
+                standardActionBar.classList.remove('hidden');
+
+                if (mission.type === 'A' || mission.type === 'B' || mission.type === 'D') {
+                    // Option cards
+                    const optionsGrid = document.createElement('div');
+                    optionsGrid.className = 'grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl';
+
+                    if (mission.type === 'D') {
+                        const fillPreview = document.createElement('div');
+                        fillPreview.className = 'col-span-full bg-cyan-50 border-2 border-cyan-300 p-3 rounded-2xl text-center font-bold text-slate-800 text-lg mb-2';
+                        fillPreview.innerText = mission.fillSentence;
+                        optionsGrid.appendChild(fillPreview);
+                    }
+
+                    mission.options.forEach((opt, optIdx) => {
+                        const btn = document.createElement('button');
+                        btn.className = `interactive-target word-drone p-4 rounded-2xl border-2 border-slate-200 bg-creamCard hover:bg-cyan-50 text-slate-800 font-bold text-lg text-center shadow-sm flex items-center justify-center gap-2 cursor-pointer transition`;
+                        btn.setAttribute('data-target-id', optIdx);
+                        btn.onclick = () => selectOption(optIdx, btn);
+                        btn.innerHTML = `
+                            <span class="w-7 h-7 rounded-full bg-cyan-100 text-cyan-800 text-xs font-black flex items-center justify-center">${String.fromCharCode(65 + optIdx)}</span>
+                            <span>${opt}</span>
+                        `;
+                        optionsGrid.appendChild(btn);
+                    });
+                    workspace.appendChild(optionsGrid);
+
+                } else if (mission.type === 'C' || mission.type === 'E') {
+                    // Word Order Assembly Drones
+                    const assemblyContainer = document.createElement('div');
+                    assemblyContainer.className = 'flex flex-col items-center gap-4 w-full';
+
+                    // Active assembled sentence slot box
+                    const slotBox = document.createElement('div');
+                    slotBox.id = 'assembledSlotBox';
+                    slotBox.className = 'w-full min-h-[64px] p-3 bg-slate-100 border-2 border-dashed border-cyan-400 rounded-2xl flex flex-wrap items-center justify-center gap-2 shadow-inner';
+                    slotBox.innerHTML = `<span id="slotPlaceholder" class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tekan atau susun perkataan di bawah</span>`;
+
+                    // Unselected floating word drones
+                    const dronesPool = document.createElement('div');
+                    dronesPool.id = 'dronesPool';
+                    dronesPool.className = 'flex flex-wrap items-center justify-center gap-3 w-full mt-2';
+
+                    mission.words.forEach((w, wIdx) => {
+                        const wordCard = document.createElement('div');
+                        wordCard.id = `drone-${wIdx}`;
+                        wordCard.className = `interactive-target word-drone px-4 py-3 bg-white border-2 border-cyan-300 hover:border-cyan-500 rounded-2xl text-slate-800 font-extrabold text-base sm:text-lg shadow-md cursor-pointer flex items-center gap-2 transition active:scale-95`;
+                        wordCard.setAttribute('data-target-id', wIdx);
+                        wordCard.onclick = () => toggleWordAssembly(wIdx, w);
+                        wordCard.innerHTML = `<span>${w}</span>`;
+                        dronesPool.appendChild(wordCard);
+                    });
+
+                    assemblyContainer.appendChild(slotBox);
+                    assemblyContainer.appendChild(dronesPool);
+                    workspace.appendChild(assemblyContainer);
+                }
+            }
+
+            speakInstruction();
+        }
+
+        function getMissionBadgeText(type) {
+            switch(type) {
+                case 'A': return 'MISI A — KENAL PERKATAAN';
+                case 'B': return 'MISI B — PILIH FRASA';
+                case 'C': return 'MISI C — SUSUN AYAT';
+                case 'D': return 'MISI D — LENGKAPKAN AYAT';
+                case 'E': return 'MISI E — BINA AYAT GAMBAR';
+                case 'F': return 'MISI F — MENULIS DIGITAL';
+                default: return 'MISI SIBER';
+            }
+        }
+
+        let activeOptionIndex = null;
+
+        function selectOption(idx, element) {
+            activeOptionIndex = idx;
+            document.querySelectorAll('#missionWorkspace .interactive-target').forEach(el => {
+                el.classList.remove('border-cyan-600', 'bg-cyan-100', 'ring-2', 'ring-cyan-400');
+                el.classList.add('bg-creamCard');
+            });
+            element.classList.remove('bg-creamCard');
+            element.classList.add('border-cyan-600', 'bg-cyan-100', 'ring-2', 'ring-cyan-400');
+        }
+
+        function toggleWordAssembly(wordIdx, wordText) {
+            const slotBox = document.getElementById('assembledSlotBox');
+            const placeholder = document.getElementById('slotPlaceholder');
+            const droneCard = document.getElementById(`drone-${wordIdx}`);
+
+            if (selectedWordIndices.includes(wordIdx)) {
+                // Deselect word
+                selectedWordIndices = selectedWordIndices.filter(i => i !== wordIdx);
+                droneCard.classList.remove('opacity-40', 'pointer-events-none');
+                
+                // Remove word node from slot box
+                const existingBadge = document.getElementById(`selected-badge-${wordIdx}`);
+                if (existingBadge) existingBadge.remove();
+
+                if (selectedWordIndices.length === 0 && placeholder) {
+                    placeholder.style.display = 'block';
+                }
+            } else {
+                // Select word
+                selectedWordIndices.push(wordIdx);
+                if (placeholder) placeholder.style.display = 'none';
+                droneCard.classList.add('opacity-40', 'pointer-events-none');
+
+                const wordTag = document.createElement('span');
+                wordTag.id = `selected-badge-${wordIdx}`;
+                wordTag.className = 'px-3 py-1.5 bg-cyan-600 text-white font-extrabold text-sm sm:text-base rounded-xl flex items-center gap-1.5 shadow transition transform animate-bounce-short';
+                wordTag.innerHTML = `
+                    <span>${wordText}</span>
+                    <i class="fa-solid fa-circle-xmark text-xs opacity-80 cursor-pointer" onclick="toggleWordAssembly(${wordIdx}, '${wordText}')"></i>
+                `;
+                slotBox.appendChild(wordTag);
+            }
+        }
+
+        function requestScaffoldingHint() {
+            const mission = missions[currentMissionIndex];
+            if (scaffoldingLevel < 4) {
+                scaffoldingLevel++;
+            }
+            const hintText = mission.hints[scaffoldingLevel - 1];
+            document.getElementById('scaffoldingBoxText').innerText = `💡 PETUNJUK ${scaffoldingLevel}: ${hintText}`;
+            document.getElementById('hintBadge').innerText = `${scaffoldingLevel}/4`;
+
+            if ('speechSynthesis' in window && isAudioEnabled) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(`Petunjuk: ${hintText}`);
+                utterance.lang = 'ms-MY';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function checkCurrentAnswer() {
+            const mission = missions[currentMissionIndex];
+            let isCorrect = false;
+
+            if (mission.type === 'A' || mission.type === 'B' || mission.type === 'D') {
+                if (activeOptionIndex === mission.correctIndex) {
+                    isCorrect = true;
+                }
+            } else if (mission.type === 'C' || mission.type === 'E') {
+                if (JSON.stringify(selectedWordIndices) === JSON.stringify(mission.correctOrder)) {
+                    isCorrect = true;
+                }
+            }
+
+            if (isCorrect) {
+                handleSuccess();
+            } else {
+                handleFailure();
+            }
+        }
+
+        function handleSuccess() {
+            // Calculate score based on hints used
+            let pointsGained = 100;
+            if (scaffoldingLevel === 1) pointsGained = 80;
+            else if (scaffoldingLevel === 2) pointsGained = 60;
+            else if (scaffoldingLevel >= 3) pointsGained = 50;
+
+            score += pointsGained;
+            stars += 1;
+            updateHUD();
+
+            const mission = missions[currentMissionIndex];
+            document.getElementById('cikguNaraText').innerText = `"✅ BAGUS! Ayat kamu betul: '${mission.fullSentence}' (+${pointsGained} MATA)"`;
+
+            if ('speechSynthesis' in window && isAudioEnabled) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(`Bagus! Ayat kamu betul.`);
+                utterance.lang = 'ms-MY';
+                window.speechSynthesis.speak(utterance);
+            }
+
+            setTimeout(() => {
+                if (currentMissionIndex < 9) {
+                    currentMissionIndex++;
+                    activeOptionIndex = null;
+                    updateHUD();
+                    renderMission(currentMissionIndex);
+                } else {
+                    showVictoryScreen();
+                }
+            }, 1800);
+        }
+
+        function handleFailure() {
+            document.getElementById('cikguNaraText').innerText = `"Hampir betul. Cuba sekali lagi atau minta petunjuk bantuan."`;
+            if ('speechSynthesis' in window && isAudioEnabled) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(`Hampir betul. Cuba sekali lagi.`);
+                utterance.lang = 'ms-MY';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function initWritingCanvas() {
+            writingCanvas = document.getElementById('writingCanvas');
+            writingCtx = writingCanvas.getContext('2d');
+
+            // Responsive devicePixelRatio resolution adjustment
+            function resizeCanvas() {
+                const rect = writingCanvas.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                writingCanvas.width = rect.width * dpr;
+                writingCanvas.height = rect.height * dpr;
+                writingCtx.scale(dpr, dpr);
+                writingCtx.lineWidth = 4;
+                writingCtx.lineCap = 'round';
+                writingCtx.lineJoin = 'round';
+                writingCtx.strokeStyle = '#0284C7';
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Pointer Drawing Listeners (Mouse / Touch / Stylus)
+            function getCanvasCoords(e) {
+                const rect = writingCanvas.getBoundingClientRect();
+                let clientX = e.clientX;
+                let clientY = e.clientY;
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                }
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
+
+            function startDrawing(e) {
+                isDrawing = true;
+                const coords = getCanvasCoords(e);
+                writingCtx.beginPath();
+                writingCtx.moveTo(coords.x, coords.y);
+                saveCanvasState();
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+                const coords = getCanvasCoords(e);
+                writingCtx.lineTo(coords.x, coords.y);
+                writingCtx.stroke();
+            }
+
+            function stopDrawing() {
+                if (isDrawing) {
+                    writingCtx.closePath();
+                    isDrawing = false;
+                }
+            }
+
+            writingCanvas.addEventListener('mousedown', startDrawing);
+            writingCanvas.addEventListener('mousemove', draw);
+            writingCanvas.addEventListener('mouseup', stopDrawing);
+            writingCanvas.addEventListener('mouseleave', stopDrawing);
+
+            writingCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); });
+            writingCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+            writingCanvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function saveCanvasState() {
+            if (strokeHistory.length >= 10) strokeHistory.shift();
+            strokeHistory.push(writingCtx.getImageData(0, 0, writingCanvas.width, writingCanvas.height));
+        }
+
+        function undoCanvas() {
+            if (strokeHistory.length > 0) {
+                const previousState = strokeHistory.pop();
+                writingCtx.putImageData(previousState, 0, 0);
+            } else {
+                clearCanvas();
+            }
+        }
+
+        function clearCanvas() {
+            if (writingCtx && writingCanvas) {
+                writingCtx.clearRect(0, 0, writingCanvas.width, writingCanvas.height);
+                strokeHistory = [];
+            }
+        }
+
+        function openSelfCheckModal() {
+            document.getElementById('chkCap').checked = false;
+            document.getElementById('chkOrder').checked = false;
+            document.getElementById('chkMeaning').checked = false;
+            document.getElementById('chkPeriod').checked = false;
+            document.getElementById('selfCheckModal').classList.remove('hidden');
+        }
+
+        function closeSelfCheckModal() {
+            document.getElementById('selfCheckModal').classList.add('hidden');
+        }
+
+        function confirmWritingSubmit() {
+            closeSelfCheckModal();
+            handleSuccess();
+        }
+
+        function startGame(useCamera) {
+            document.getElementById('startModal').classList.add('hidden');
+            if (useCamera) {
+                initCameraAndAR();
+            }
+        }
+
+        function toggleCameraMode() {
+            if (isCameraActive) {
+                stopCamera();
+            } else {
+                initCameraAndAR();
+            }
+        }
+
+        function initCameraAndAR() {
+            const loadingModal = document.getElementById('loadingModal');
+            const arOverlay = document.getElementById('arOverlayContainer');
+            loadingModal.classList.remove('hidden');
+
+            videoElement = document.getElementById('webcam');
+            arCanvas = document.getElementById('arCanvas');
+            arCtx = arCanvas.getContext('2d');
+
+            try {
+                handsInstance = new Hands({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                });
+
+                handsInstance.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.6,
+                    minTrackingConfidence: 0.6
+                });
+
+                handsInstance.onResults(onARHandResults);
+
+                cameraUtils = new Camera(videoElement, {
+                    onFrame: async () => {
+                        await handsInstance.send({ image: videoElement });
+                    },
+                    width: 320,
+                    height: 240
+                });
+
+                cameraUtils.start().then(() => {
+                    loadingModal.classList.add('hidden');
+                    arOverlay.classList.remove('hidden');
+                    document.getElementById('arPointer').classList.remove('hidden');
+                    isCameraActive = true;
+                    document.getElementById('cameraStatusText').innerText = 'AR AKTIF';
+                }).catch((err) => {
+                    console.error("Camera access error:", err);
+                    loadingModal.classList.add('hidden');
+                    document.getElementById('cameraErrorModal').classList.remove('hidden');
+                });
+
+            } catch (err) {
+                console.error("MediaPipe initialization error:", err);
+                loadingModal.classList.add('hidden');
+                document.getElementById('cameraErrorModal').classList.remove('hidden');
+            }
+        }
+
+        function stopCamera() {
+            if (cameraUtils) {
+                cameraUtils.stop();
+            }
+            document.getElementById('arOverlayContainer').classList.add('hidden');
+            document.getElementById('arPointer').classList.add('hidden');
+            isCameraActive = false;
+            document.getElementById('cameraStatusText').innerText = 'MOD AR';
+        }
+
+        function retryCamera() {
+            document.getElementById('cameraErrorModal').classList.add('hidden');
+            initCameraAndAR();
+        }
+
+        function proceedWithoutCamera() {
+            document.getElementById('cameraErrorModal').classList.add('hidden');
+            stopCamera();
+        }
+
+        // Process Hand Landmarks for Cyber Pen Pointer & Dwell Target Selection
+        function onARHandResults(results) {
+            arCtx.save();
+            arCtx.clearRect(0, 0, arCanvas.width, arCanvas.height);
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+
+                // Landmark 8 is Index Finger Tip
+                const indexTip = landmarks[8];
+                const screenX = (1 - indexTip.x) * window.innerWidth;
+                const screenY = indexTip.y * window.innerHeight;
+
+                // Move Cyber AR Pointer
+                const arPointer = document.getElementById('arPointer');
+                arPointer.style.left = `${screenX}px`;
+                arPointer.style.top = `${screenY}px`;
+
+                // Render Cyber Pen Gauntlet Line Overlay on Mini Video Canvas
+                arCtx.strokeStyle = '#06B6D4';
+                arCtx.lineWidth = 3;
+                landmarks.forEach((pt) => {
+                    arCtx.beginPath();
+                    arCtx.arc(pt.x * arCanvas.width, pt.y * arCanvas.height, 3, 0, 2 * Math.PI);
+                    arCtx.fillStyle = '#38BDF8';
+                    arCtx.fill();
+                });
+
+                // Detect Hover over Interactive Target Drones / Buttons
+                detectDwellTarget(screenX, screenY);
+
+            } else {
+                resetDwellTimer();
+            }
+            arCtx.restore();
+        }
+
+        // Dwell Timer Target Locking (0.75s selection duration)
+        function detectDwellTarget(x, y) {
+            const targets = document.querySelectorAll('.interactive-target');
+            let hoveredElement = null;
+
+            targets.forEach((el) => {
+                const rect = el.getBoundingClientRect();
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                    hoveredElement = el;
+                }
+            });
+
+            if (hoveredElement) {
+                if (dwellTargetElement !== hoveredElement) {
+                    dwellTargetElement = hoveredElement;
+                    dwellStartTime = Date.now();
+                    document.getElementById('arPointerLabel').innerText = 'KUNCI...';
+                } else {
+                    const elapsed = Date.now() - dwellStartTime;
+                    const progress = Math.min(elapsed / DWELL_THRESHOLD_MS, 1.0);
+
+                    // Update dwell ring stroke offset
+                    const ring = document.getElementById('dwellRingProgress');
+                    const circumference = 125.6;
+                    ring.style.strokeDashoffset = circumference * (1 - progress);
+
+                    if (elapsed >= DWELL_THRESHOLD_MS) {
+                        // Trigger Click
+                        document.getElementById('arPointerLabel').innerText = 'DIPILIH!';
+                        hoveredElement.click();
+                        resetDwellTimer();
+                    }
+                }
+            } else {
+                resetDwellTimer();
+            }
+        }
+
+        function resetDwellTimer() {
+            dwellTargetElement = null;
+            dwellStartTime = 0;
+            const ring = document.getElementById('dwellRingProgress');
+            if (ring) ring.style.strokeDashoffset = '125.6';
+            const label = document.getElementById('arPointerLabel');
+            if (label) label.innerText = 'MENUNGGU';
+        }
+
+        function showVictoryScreen() {
+            document.getElementById('victoryScore').innerText = score;
+            document.getElementById('victoryStars').innerText = '⭐'.repeat(Math.min(stars, 3));
+
+            const summaryList = document.getElementById('victorySentencesList');
+            summaryList.innerHTML = '';
+
+            missions.forEach((m, idx) => {
+                const item = document.createElement('div');
+                item.className = 'p-3 bg-white rounded-xl border border-slate-200 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 shadow-sm';
+                item.innerHTML = `
+                    <div>
+                        <span class="font-extrabold text-cyan-700 me-2">Misi ${idx + 1}:</span>
+                        <span class="font-bold text-slate-800">${m.fullSentence}</span>
+                    </div>
+                    <div class="flex gap-1.5 text-[11px]">
+                        <span class="px-2 py-0.5 bg-blue-100 text-blue-800 font-semibold rounded">SUBJEK: ${m.subject}</span>
+                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-semibold rounded">PREDIKAT: ${m.predicate}</span>
+                    </div>
+                `;
+                summaryList.appendChild(item);
+            });
+
+            document.getElementById('victoryModal').classList.remove('hidden');
+        }
+
+        function openReviewMode() {
+            const container = document.getElementById('reviewContent');
+            container.innerHTML = '';
+
+            missions.forEach((m, idx) => {
+                const card = document.createElement('div');
+                card.className = 'p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row gap-4 items-center';
+                card.innerHTML = `
+                    <div class="w-24 h-20 flex-shrink-0 bg-white rounded-xl p-1 flex items-center justify-center border">
+                        ${m.svgArt}
+                    </div>
+                    <div class="flex-grow">
+                        <span class="text-xs font-extrabold text-cyan-700 uppercase">MISI ${idx + 1} — ${m.title}</span>
+                        <h4 class="text-base font-bold text-slate-800 mt-0.5">${m.fullSentence}</h4>
+                        <div class="flex flex-wrap gap-2 mt-2 text-xs font-semibold">
+                            <span class="px-2.5 py-1 bg-cyan-100 text-cyan-900 rounded-lg">Subjek: ${m.subject}</span>
+                            <span class="px-2.5 py-1 bg-emerald-100 text-emerald-900 rounded-lg">Predikat: ${m.predicate}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('reviewModal').classList.remove('hidden');
+        }
+
+        function closeReviewMode() {
+            document.getElementById('reviewModal').classList.add('hidden');
+        }
+
+        function openWritingPractice() {
+            document.getElementById('victoryModal').classList.add('hidden');
+            currentMissionIndex = 9; // Jump to Writing mission
+            updateHUD();
+            renderMission(9);
+        }
+
+        function restartGame() {
+            document.getElementById('victoryModal').classList.add('hidden');
+            currentMissionIndex = 0;
+            score = 0;
+            stars = 0;
+            updateHUD();
+            renderMission(0);
+        }
+    </script>
+</body>
+</html>
